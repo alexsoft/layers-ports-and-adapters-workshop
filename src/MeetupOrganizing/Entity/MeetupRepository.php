@@ -16,8 +16,10 @@ class MeetupRepository
         $this->connection = $connection;
     }
 
-    public function save(Meetup $meetup): void
+    public function save(Meetup $meetup): int
     {
         $this->connection->insert('meetups', $meetup->getData());
+
+        return (int)$this->connection->lastInsertId();
     }
 }

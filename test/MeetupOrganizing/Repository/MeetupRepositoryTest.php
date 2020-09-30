@@ -47,6 +47,10 @@ class MeetupRepositoryTest extends TestCase
                 ]
             );
 
-        $sut->save($meetup);
+        $connection->expects($this->once())
+            ->method('lastInsertId')
+            ->willReturn(111);
+
+        $this->assertEquals(111, $sut->save($meetup));
     }
 }

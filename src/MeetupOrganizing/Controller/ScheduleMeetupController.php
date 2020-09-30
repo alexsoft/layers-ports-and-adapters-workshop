@@ -80,9 +80,7 @@ final class ScheduleMeetupController
                     ScheduledDate::fromString($formData['scheduleForDate'] . ' ' . $formData['scheduleForTime'])
                 );
 
-                $this->meetupRepository->save($meetup);
-
-                $meetupId = (int)$this->connection->lastInsertId();
+                $meetupId = $this->meetupRepository->save($meetup);
 
                 $this->session->addSuccessFlash('Your meetup was scheduled successfully');
 
