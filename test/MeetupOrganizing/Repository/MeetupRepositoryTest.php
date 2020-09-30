@@ -25,7 +25,8 @@ class MeetupRepositoryTest extends TestCase
             UserId::fromInt($userId),
             $name,
             $description,
-            ScheduledDate::fromString($dateTime)
+            ScheduledDate::fromString($dateTime),
+            false
         );
 
         $connection = $this->createMock(Connection::class);

@@ -16,11 +16,13 @@ class Meetup
 
     private bool $isCancelled;
 
-    public function __construct(UserId $organizer,
-                                string $name,
-                                string $description,
-                                ScheduledDate $scheduledFor,
-                                bool $isCancelled = false)
+    public function __construct(
+        UserId $organizer,
+        string $name,
+        string $description,
+        ScheduledDate $scheduledFor,
+        bool $isCancelled
+    )
     {
         $this->organizer = $organizer;
         $this->name = $name;
