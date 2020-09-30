@@ -6,7 +6,9 @@ namespace MeetupOrganizing\Controller;
 use Assert\Assert;
 use Doctrine\DBAL\Connection;
 use Exception;
+use MeetupOrganizing\Entity\Meetup;
 use MeetupOrganizing\Entity\ScheduledDate;
+use MeetupOrganizing\Entity\MeetupRepository;
 use MeetupOrganizing\Session;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,16 +26,20 @@ final class ScheduleMeetupController
 
     private Connection $connection;
 
+    private MeetupRepository $meetupRepository;
+
     public function __construct(
         Session $session,
         TemplateRendererInterface $renderer,
         RouterInterface $router,
-        Connection $connection
+        Connection $connection,
+        MeetupRepository $meetupRepository
     ) {
         $this->session = $session;
         $this->renderer = $renderer;
         $this->router = $router;
         $this->connection = $connection;
+        $this->meetupRepository = $meetupRepository;
     }
 
     public function __invoke(
@@ -66,14 +72,15 @@ final class ScheduleMeetupController
             }
 
             if (empty($formErrors)) {
-                $record = [
-                    'organizerId' => $this->session->getLoggedInUser()->userId()->asInt(),
-                    'name' => $formData['name'],
-                    'description' => $formData['description'],
-                    'scheduledFor' => $formData['scheduleForDate'] . ' ' . $formData['scheduleForTime'],
-                    'wasCancelled' => 0
-                ];
-                $this->connection->insert('meetups', $record);
+
+                $meetup = new Meetup(
+                    $this->session->getLoggedInUser()->userId(),
+                    $formData['name'],
+                    $formData['description'],
+                    ScheduledDate::fromString($formData['scheduleForDate'] . ' ' . $formData['scheduleForTime'])
+                );
+
+                $this->meetupRepository->save($meetup);
 
                 $meetupId = (int)$this->connection->lastInsertId();
 
