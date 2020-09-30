@@ -1,14 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MeetupOrganizing\Controller;
 
-use Assert\Assert;
 use DateTimeImmutable;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Driver\Statement;
-use MeetupOrganizing\Entity\ScheduledDate;
-use PDO;
+use MeetupOrganizing\Entity\MeetupRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -17,45 +14,25 @@ use Zend\Stratigility\MiddlewareInterface;
 
 final class ListMeetupsController implements MiddlewareInterface
 {
-    private Connection $connection;
-
     private TemplateRendererInterface $renderer;
 
+    private MeetupRepository $meetupRepository;
+
     public function __construct(
-        Connection $connection,
+        MeetupRepository $meetupRepository,
         TemplateRendererInterface $renderer
     ) {
-        $this->connection = $connection;
         $this->renderer = $renderer;
+        $this->meetupRepository = $meetupRepository;
     }
 
     public function __invoke(Request $request, Response $response, callable $out = null): ResponseInterface
     {
         $now = new DateTimeImmutable();
 
-        $statement = $this->connection->createQueryBuilder()
-            ->select('*')
-            ->from('meetups')
-            ->where('scheduledFor >= :now')
-            ->setParameter('now', $now->format(ScheduledDate::DATE_TIME_FORMAT))
-            ->andWhere('wasCancelled = :wasNotCancelled')
-            ->setParameter('wasNotCancelled', 0)
-            ->execute();
-        Assert::that($statement)->isInstanceOf(Statement::class);
+        $upcomingMeetups = $this->meetupRepository->listUpcomingMeetups($now);
 
-        $upcomingMeetups = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-        $statement = $this->connection->createQueryBuilder()
-            ->select('*')
-            ->from('meetups')
-            ->where('scheduledFor < :now')
-            ->setParameter('now', $now->format(ScheduledDate::DATE_TIME_FORMAT))
-            ->andWhere('wasCancelled = :wasNotCancelled')
-            ->setParameter('wasNotCancelled', 0)
-            ->execute();
-        Assert::that($statement)->isInstanceOf(Statement::class);
-
-        $pastMeetups = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $pastMeetups = $this->meetupRepository->listPastMeetups($now);
 
         $response->getBody()->write(
             $this->renderer->render(
