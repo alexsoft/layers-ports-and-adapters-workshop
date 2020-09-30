@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace MeetupOrganizing\Entity;
 
+use Assert\Assert;
+use DateTimeImmutable;
+
 class Meetup
 {
     private UserId $organizer;
@@ -25,8 +28,14 @@ class Meetup
     )
     {
         $this->organizer = $organizer;
+
+        Assert::that($name)->notEmpty();
         $this->name = $name;
+
+        Assert::that($description)->notEmpty();
         $this->description = $description;
+
+        Assert::that($scheduledFor->isInTheFuture(new DateTimeImmutable()))->true();
         $this->scheduledFor = $scheduledFor;
         $this->isCancelled = $isCancelled;
     }
